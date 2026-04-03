@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cardzera for GitHub Profile</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎟️</text></svg>" />
+  <meta name="description"
+    content="Generate a customizable Discord server invite card for your GitHub README or any webpage." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #000000;
+      --surface: #0a0a0a;
+      --surface2: #111111;
+      --surface3: #1a1a1a;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.14);
+      --accent: #5865f2;
+      --accent-glow: rgba(88, 101, 242, 0.12);
+      --green: #23a55a;
+      --red: #f04747;
+      --amber: #f59e0b;
+      --text: #f2f3f5;
+      --muted: #b5bac1;
+      --faint: #525560;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 14px;
+      --mono: 'Roboto Mono', monospace;
+      --sans: system-ui, -apple-system, sans-serif;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Ambient glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(88, 101, 242, 0.05) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ──────────────────────────────────────── */
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 580px) minmax(0, 360px);
+      width: min(960px, calc(100vw - 2rem));
+      height: min(680px, calc(100vh - 2rem));
+      gap: 1rem;
+      position: relative;
+      z-index: 10;
+      margin: 1rem;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        align-items: flex-start;
+        overflow-y: auto;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        height: auto;
+        width: calc(100vw - 2rem);
+        margin: 1rem;
+      }
+
+      .right-col {
+        height: auto !important;
+      }
+
+      .preview-panel {
+        flex: none !important;
+        min-height: 220px;
+      }
+    }
+
+    /* ── Left panel (scrolls internally) ─────────────── */
+    aside {
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface3) transparent;
+    }
+
+    aside::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    aside::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    aside::-webkit-scrollbar-thumb {
+      background: var(--surface3);
+      border-radius: 99px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--faint);
+    }
+
+    .panel-head svg {
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+
+    .panel-body {
+      padding: 0.9rem;
+    }
+
+    /* ── Form sections ───────────────────────────────── */
+    .fsec {
+      margin-bottom: 1rem;
+    }
+
+    .fsec:last-child {
+      margin-bottom: 0;
+    }
+
+    .fsec-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--faint);
+      margin-bottom: 0.55rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .field {
+      margin-bottom: 0.5rem;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-label {
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .field-label .hint {
+      font-size: 0.63rem;
+      color: var(--faint);
+      font-weight: 400;
+    }
+
+    .req {
+      color: var(--red);
+      font-size: 0.7rem;
+    }
+
+    .inp-text {
+      width: 100%;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.65rem;
+      color: var(--text);
+      font-size: 0.78rem;
+      font-family: var(--mono);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .inp-text:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .inp-text::placeholder {
+      color: var(--faint);
+    }
+
+    /* Color picker combo */
+    .color-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.32rem 0.65rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .color-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .color-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .color-swatch input[type="color"] {
+      position: absolute;
+      inset: -5px;
+      width: calc(100% + 10px);
+      height: calc(100% + 10px);
+      opacity: 0;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+    }
+
+    .color-prefix {
+      color: var(--faint);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .color-hex {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      outline: none;
+      min-width: 0;
+      text-transform: uppercase;
+    }
+
+    /* Range + number */
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .inp-num {
+      width: 54px;
+      flex-shrink: 0;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.38rem 0.4rem;
+      color: var(--text);
+      font-size: 0.78rem;
+      font-family: var(--mono);
+      outline: none;
+      text-align: center;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    .inp-num::-webkit-inner-spin-button,
+    .inp-num::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+    }
+
+    .inp-num:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .inp-range {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 3px;
+      background: var(--surface3);
+      border-radius: 99px;
+      outline: none;
+      cursor: pointer;
+      border: none;
+    }
+
+    .inp-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(88, 101, 242, 0.5);
+      transition: transform 0.15s;
+    }
+
+    .inp-range::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.2rem 0;
+    }
+
+    .toggle-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .toggle {
+      position: relative;
+      width: 34px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--faint);
+      transition: left 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+    }
+
+    .toggle input:checked+.toggle-track {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle input:checked+.toggle-track::after {
+      left: calc(100% - 14px);
+      background: #fff;
+    }
+
+    /* Tool wrapper + bot bar */
+    .tool-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .tool-title {
+      width: 100%;
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      padding-left: 16px;
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem;
+    }
+
+    .title-link {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--faint);
+      text-decoration: none;
+      letter-spacing: 0;
+      transition: color 0.15s;
+    }
+
+    .title-link:hover {
+      color: var(--muted);
+    }
+
+    .bot-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.76rem;
+      color: var(--faint);
+    }
+
+    .bot-bar svg {
+      flex-shrink: 0;
+      opacity: 0.5;
+    }
+
+    .bot-bar span {
+      white-space: nowrap;
+    }
+
+    .bot-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 0.25rem 0.55rem;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .bot-btn:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+      background: var(--surface2);
+    }
+
+    /* Char counter */
+    .char-count {
+      display: flex;
+      justify-content: flex-end;
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      color: var(--faint);
+      margin-top: 0.25rem;
+      transition: color 0.15s;
+    }
+
+    .char-count.warn {
+      color: var(--amber);
+    }
+
+    .char-count.error {
+      color: var(--red);
+    }
+
+    /* ── Right column ─────────────────────────────── */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-height: 0;
+      height: 100%;
+    }
+
+    /* ── Preview ─────────────────────────────────── */
+    .preview-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background:
+        radial-gradient(ellipse at 50% -10%, rgba(88, 101, 242, 0.07) 0%, transparent 55%),
+        repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(255, 255, 255, 0.016) 23px, rgba(255, 255, 255, 0.016) 24px),
+        repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(255, 255, 255, 0.016) 23px, rgba(255, 255, 255, 0.016) 24px);
+      position: relative;
+      min-height: 0;
+    }
+
+    #preview-placeholder {
+      text-align: center;
+      color: var(--faint);
+    }
+
+    .ph-icon {
+      font-size: 2rem;
+      margin-bottom: 0.65rem;
+      opacity: 0.3;
+      line-height: 1;
+    }
+
+    #preview-placeholder p {
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+
+    #preview-placeholder code {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      background: var(--surface3);
+      color: var(--accent);
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+    }
+
+    #preview-loading {
+      display: none;
+      position: absolute;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #preview-loading.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #preview-img {
+      max-width: 100%;
+      max-height: 100%;
+      display: none;
+      animation: fadeUp 0.25s ease;
+      object-fit: contain;
+    }
+
+    #preview-img.show {
+      display: block;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── Output ──────────────────────────────────── */
+    .output-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 0.6rem;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--faint);
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.65rem 0.55rem;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      position: relative;
+      transition: color 0.15s;
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+    }
+
+    .tab-btn:hover:not(.active) {
+      color: var(--muted);
+    }
+
+    .tab-pane {
+      display: none;
+      padding: 0.75rem;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .code-block {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-lang {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--faint);
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.22rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+    }
+
+    .copy-btn.copied {
+      color: var(--green);
+      border-color: rgba(35, 165, 90, 0.35);
+    }
+
+    .code-body {
+      padding: 0.75rem 0.9rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      line-height: 1.65;
+      color: var(--muted);
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Tool ───────────────────────────────────────── -->
+  <div class="tool-wrap">
+    <div class="tool-title">🎟️ cardzera-profile-readme <a
+        href="https://github.com/matheusaudibert/cardzera-profile-readme" target="_blank" rel="noopener"
+        class="title-link">more info</a></div>
+    <div class="layout">
+
+      <!-- ── LEFT: Preview + Output ── -->
+      <div class="right-col">
+
+        <div class="preview-panel">
+          <div class="panel-head">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            Preview
+          </div>
+          <div class="preview-body" id="preview-body">
+            <div id="preview-placeholder">
+              <p>Enter your <code>Server ID</code> to preview</p>
+            </div>
+            <div id="preview-loading">
+              <div class="spinner"></div>
+            </div>
+            <img id="preview-img" alt="Discord Server Card" />
+          </div>
+        </div>
+
+        <div class="output-panel">
+          <div class="panel-head">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+            Output
+          </div>
+          <div class="tab-bar">
+            <button class="tab-btn active" data-tab="markdown">Markdown</button>
+            <button class="tab-btn" data-tab="html">HTML</button>
+            <button class="tab-btn" data-tab="url">URL</button>
+          </div>
+
+          <div class="tab-pane active" id="tab-markdown">
+            <div class="code-block">
+              <div class="code-head">
+                <span class="code-lang">markdown</span>
+                <button class="copy-btn" data-target="out-markdown">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+              <pre class="code-body" id="out-markdown"></pre>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="tab-html">
+            <div class="code-block">
+              <div class="code-head">
+                <span class="code-lang">html</span>
+                <button class="copy-btn" data-target="out-html">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4dea2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+              <pre class="code-body" id="out-html"></pre>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="tab-url">
+            <div class="code-block">
+              <div class="code-head">
+                <span class="code-lang">url</span>
+                <button class="copy-btn" data-target="out-url">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+              <pre class="code-body" id="out-url"></pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT: Configuration ── -->
+      <aside>
+        <div class="panel">
+          <div class="panel-head">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2" />
+            </svg>
+            Configuration
+          </div>
+          <div class="panel-body">
+
+            <div class="fsec">
+              <div class="fsec-label">Server Info</div>
+              <div class="field">
+                <div class="field-label">Server ID <span class="req">*</span></div>
+                <input class="inp-text" type="text" id="serverId" placeholder="e.g. 1234567890123456789"
+                  autocomplete="off" spellcheck="false" />
+              </div>
+              <div class="field">
+                <div class="field-label">Invite Code <span class="req">*</span> <span class="hint">(code or full
+                    URL)</span></div>
+                <input class="inp-text" type="text" id="inviteLink" placeholder="e.g. abc123 or discord.gg/abc123"
+                  autocomplete="off" spellcheck="false" />
+              </div>
+            </div>
+
+            <div class="fsec">
+              <div class="fsec-label">Colors</div>
+              <div class="field">
+                <div class="field-label">Background</div>
+                <div class="color-wrap">
+                  <div class="color-swatch" id="sw-backgroundColor" style="background:#1a1c1f">
+                    <input type="color" id="pk-backgroundColor" value="#1a1c1f" />
+                  </div>
+                  <span class="color-prefix">#</span>
+                  <input type="text" class="color-hex" id="hx-backgroundColor" value="1A1C1F" maxlength="6"
+                    spellcheck="false" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">Server Name</div>
+                <div class="color-wrap">
+                  <div class="color-swatch" id="sw-nameColor" style="background:#ffffff">
+                    <input type="color" id="pk-nameColor" value="#ffffff" />
+                  </div>
+                  <span class="color-prefix">#</span>
+                  <input type="text" class="color-hex" id="hx-nameColor" value="FFFFFF" maxlength="6"
+                    spellcheck="false" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">Info <span class="hint">(members / online)</span></div>
+                <div class="color-wrap">
+                  <div class="color-swatch" id="sw-infoColor" style="background:#b5bac1">
+                    <input type="color" id="pk-infoColor" value="#b5bac1" />
+                  </div>
+                  <span class="color-prefix">#</span>
+                  <input type="text" class="color-hex" id="hx-infoColor" value="B5BAC1" maxlength="6"
+                    spellcheck="false" />
+                </div>
+              </div>
+            </div>
+
+            <div class="fsec">
+              <div class="fsec-label">Join Button</div>
+              <div class="field">
+                <div class="field-label">Color</div>
+                <div class="color-wrap">
+                  <div class="color-swatch" id="sw-buttonColor" style="background:#00863A">
+                    <input type="color" id="pk-buttonColor" value="#00863A" />
+                  </div>
+                  <span class="color-prefix">#</span>
+                  <input type="text" class="color-hex" id="hx-buttonColor" value="00863A" maxlength="6"
+                    spellcheck="false" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">Text Color</div>
+                <div class="color-wrap">
+                  <div class="color-swatch" id="sw-buttonTextColor" style="background:#ffffff">
+                    <input type="color" id="pk-buttonTextColor" value="#ffffff" />
+                  </div>
+                  <span class="color-prefix">#</span>
+                  <input type="text" class="color-hex" id="hx-buttonTextColor" value="FFFFFF" maxlength="6"
+                    spellcheck="false" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">Text <span class="hint">(max 28 chars)</span></div>
+                <input class="inp-text" type="text" id="buttonText" value="Join" maxlength="28" spellcheck="false" />
+                <div class="char-count" id="bt-count">4 / 28</div>
+              </div>
+              <div class="field">
+                <div class="field-label">Border Radius <span class="hint">(0 – 30 px)</span></div>
+                <div class="range-row">
+                  <input type="range" class="inp-range" id="btnRadius-range" min="0" max="30" value="10" />
+                  <input type="text" class="inp-num" id="buttonBorderRadius" value="10" />
+                </div>
+              </div>
+            </div>
+
+            <div class="fsec">
+              <div class="fsec-label">Card Shape</div>
+              <div class="field">
+                <div class="field-label">Border Radius <span class="hint">(0 – 30 px)</span></div>
+                <div class="range-row">
+                  <input type="range" class="inp-range" id="cardRadius-range" min="0" max="30" value="10" />
+                  <input type="text" class="inp-num" id="borderRadius" value="10" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">Title Max Length</div>
+                <div class="range-row">
+                  <input type="range" class="inp-range" id="titleLen-range" min="1" max="50" value="26" />
+                  <input type="text" class="inp-num" id="titleLen" value="26" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="toggle-row">
+                  <span class="toggle-label">Show ellipsis (...)</span>
+                  <label class="toggle">
+                    <input type="checkbox" id="elipsis" checked />
+                    <span class="toggle-track"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="bot-bar">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span>The bot must be in your server to display the card.</span>
+      <a href="https://discord.com/oauth2/authorize?client_id=1368283106276147200&permissions=525312&integration_type=0&scope=bot"
+        target="_blank" rel="noopener" class="bot-btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          <polyline points="15 3 21 3 21 9" />
+          <line x1="10" y1="14" x2="21" y2="3" />
+        </svg>
+        Add to server
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULTS = {
+      backgroundColor: '1a1c1f',
+      buttonColor: '00863a',
+      buttonText: 'Join',
+      buttonTextColor: 'ffffff',
+      buttonBorderRadius: 10,
+      infoColor: 'b5bac1',
+      nameColor: 'ffffff',
+      borderRadius: 10,
+      titleLen: 26,
+      elipsis: true,
+    };
+
+    const API = 'https://cardzera.audibert.dev/api';
+
+    const isHex = (v) => /^[0-9a-fA-F]{6}$/.test(v);
+
+    function normalizeInvite(raw) {
+      return raw.trim()
+        .replace(/^https?:\/\/(www\.)?discord\.gg\//i, '')
+        .replace(/^discord\.gg\//i, '');
+    }
+
+    function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+    function buildUrl(serverId, params) {
+      const qs = new URLSearchParams({ t: Date.now(), ...params });
+      return `${API}/${serverId}?${qs.toString()}`;
+    }
+
+    function getNonDefaults() {
+      const out = {};
+      const colorFields = ['backgroundColor', 'buttonColor', 'buttonTextColor', 'infoColor', 'nameColor'];
+      for (const f of colorFields) {
+        const v = document.getElementById(`hx-${f}`).value.trim().toLowerCase();
+        if (isHex(v) && v !== DEFAULTS[f].toLowerCase()) out[f] = v;
+      }
+      const bt = document.getElementById('buttonText').value;
+      if (bt !== DEFAULTS.buttonText && bt.length > 0 && bt.length <= 28) out.buttonText = bt;
+
+      const bbr = parseInt(document.getElementById('buttonBorderRadius').value);
+      if (!isNaN(bbr) && bbr !== DEFAULTS.buttonBorderRadius) out.buttonBorderRadius = clamp(bbr, 0, 30);
+
+      const br = parseInt(document.getElementById('borderRadius').value);
+      if (!isNaN(br) && br !== DEFAULTS.borderRadius) out.borderRadius = clamp(br, 0, 30);
+
+      const tl = parseInt(document.getElementById('titleLen').value);
+      if (!isNaN(tl) && tl !== DEFAULTS.titleLen) out.titleLen = tl;
+
+      const el = document.getElementById('elipsis').checked;
+      if (el !== DEFAULTS.elipsis) out.elipsis = el;
+
+      return out;
+    }
+
+    function generateOutputs() {
+      const serverId = document.getElementById('serverId').value.trim();
+      const inviteCode = normalizeInvite(document.getElementById('inviteLink').value);
+
+      if (!serverId) {
+        ['out-markdown', 'out-html', 'out-url'].forEach(id => {
+          document.getElementById(id).textContent = '<!-- Enter your Server ID to generate -->';
+        });
+        return;
+      }
+
+      const params = getNonDefaults();
+      const imageUrl = buildUrl(serverId, params);
+      const inviteUrl = inviteCode ? `https://discord.gg/${inviteCode}` : 'https://discord.gg/YOUR_INVITE';
+
+      document.getElementById('out-markdown').textContent =
+        `[![Discord Server Card](${imageUrl})](${inviteUrl})`;
+
+      document.getElementById('out-html').textContent =
+        `<a href="${inviteUrl}">\n  <img src="${imageUrl}" alt="Discord Server Card" />\n</a>`;
+
+      document.getElementById('out-url').textContent = imageUrl;
+    }
+
+    let previewTimeout;
+    function schedulePreview() {
+      clearTimeout(previewTimeout);
+      previewTimeout = setTimeout(updatePreview, 450);
+    }
+
+    function updatePreview() {
+      const serverId = document.getElementById('serverId').value.trim();
+      const ph = document.getElementById('preview-placeholder');
+      const loading = document.getElementById('preview-loading');
+      const img = document.getElementById('preview-img');
+
+      if (!serverId) {
+        ph.style.display = '';
+        loading.classList.remove('show');
+        img.classList.remove('show');
+        return;
+      }
+
+      ph.style.display = 'none';
+      loading.classList.add('show');
+      img.classList.remove('show');
+
+      const url = buildUrl(serverId, getNonDefaults());
+      const tmp = new Image();
+      tmp.onload = () => {
+        loading.classList.remove('show');
+        img.src = url;
+        img.classList.add('show');
+      };
+      tmp.onerror = () => {
+        loading.classList.remove('show');
+        ph.style.display = '';
+        ph.querySelector('p').innerHTML = 'Could not load card.<br><small>Check your Server ID.</small>';
+      };
+      tmp.src = url;
+    }
+
+    function update() {
+      generateOutputs();
+      schedulePreview();
+    }
+
+    // Color inputs
+    ['backgroundColor', 'buttonColor', 'buttonTextColor', 'infoColor', 'nameColor'].forEach(f => {
+      const pk = document.getElementById(`pk-${f}`);
+      const hx = document.getElementById(`hx-${f}`);
+      const sw = document.getElementById(`sw-${f}`);
+
+      pk.addEventListener('input', () => {
+        hx.value = pk.value.slice(1).toUpperCase();
+        sw.style.background = pk.value;
+        update();
+      });
+
+      hx.addEventListener('input', () => {
+        const v = hx.value.replace(/[^0-9a-fA-F]/g, '').toUpperCase().slice(0, 6);
+        hx.value = v;
+        if (isHex(v)) {
+          const full = '#' + v;
+          sw.style.background = full;
+          pk.value = full;
+          update();
+        }
+      });
+    });
+
+    // Range ↔ number
+    function setupRangePair(numId, rangeId, min, max) {
+      const num = document.getElementById(numId);
+      const range = document.getElementById(rangeId);
+
+      range.addEventListener('input', () => { num.value = range.value; update(); });
+
+      num.addEventListener('input', () => {
+        const v = parseInt(num.value);
+        if (!isNaN(v)) range.value = clamp(v, min, max);
+        update();
+      });
+
+      num.addEventListener('blur', () => {
+        let v = parseInt(num.value);
+        if (isNaN(v)) v = DEFAULTS[numId] ?? min;
+        v = clamp(v, min, max);
+        num.value = v;
+        range.value = v;
+        update();
+      });
+    }
+
+    setupRangePair('buttonBorderRadius', 'btnRadius-range', 0, 30);
+    setupRangePair('borderRadius', 'cardRadius-range', 0, 30);
+    setupRangePair('titleLen', 'titleLen-range', 1, 50);
+
+    // Button text counter
+    document.getElementById('buttonText').addEventListener('input', (e) => {
+      const len = e.target.value.length;
+      const el = document.getElementById('bt-count');
+      el.textContent = `${len} / 28`;
+      el.className = 'char-count' + (len >= 28 ? ' error' : len >= 24 ? ' warn' : '');
+      update();
+    });
+
+    document.getElementById('elipsis').addEventListener('change', update);
+    document.getElementById('serverId').addEventListener('input', update);
+    document.getElementById('inviteLink').addEventListener('input', generateOutputs);
+
+    // Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // Copy buttons
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = document.getElementById(btn.dataset.target).textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = btn.innerHTML;
+          btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+          btn.classList.add('copied');
+          setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+        });
+      });
+    });
+
+    generateOutputs();
+  </script>
+</body>
+
+</html>
