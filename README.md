@@ -1,4 +1,4 @@
-# lanyard-profile-readme
+# cardzera-profile-readme
 
 🎟️ Utilize [Cardzera](https://github.com/matheusaudibert/cardzera) to display your Discord server invite card in your GitHub Profile
 
