@@ -14,7 +14,7 @@ In a `README.md` file, include the following, replacing `:id` with your Discord 
 
 It should display something similar to the following (I am using my Discord server ID as an example):
 
-[![Discord Server Card](https://cardzera.audibert.dev/api/1112920281367973900?t={timestamp})](https://discord.gg/programador)
+[![Discord Server Card](https://cardzera.audibert.dev/api/1550342460008304675?t={timestamp})](https://discord.gg/nerdsbrasil)
 
 When others click it, they will be directed to your Discord server. Neat!
 
