@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: oklch(99% 0 0);
+  --foreground: oklch(15% 0 0);
+  --card: oklch(97% 0 0);
+  --card-foreground: oklch(15% 0 0);
+  --popover: oklch(97% 0 0);
+  --popover-foreground: oklch(15% 0 0);
+  --primary: #0285f7;
+  --primary-foreground: #ffffff;
+  --secondary: oklch(97% 0 0);
+  --secondary-foreground: oklch(15% 0 0);
+  --muted: oklch(97% 0 0);
+  --muted-foreground: oklch(50% 0 0);
+  --accent: oklch(72% 0.18 195);
+  --accent-foreground: oklch(15% 0 0);
+  --destructive: oklch(62% 0.22 25);
+  --border: oklch(15% 0 0 / 0.06);
+  --input: oklch(15% 0 0 / 0.06);
+  --ring: oklch(15% 0 0 / 0.12);
+  --success: oklch(65% 0.17 150);
+}
+
+.dark {
+  --background: #151515;
+  --foreground: oklch(96% 0 0);
+  --card: #1c1c1c;
+  --card-foreground: oklch(96% 0 0);
+  --popover: #1c1c1c;
+  --popover-foreground: oklch(96% 0 0);
+  --primary: #0285f7;
+  --primary-foreground: #ffffff;
+  --secondary: #1c1c1c;
+  --secondary-foreground: oklch(96% 0 0);
+  --muted: #1c1c1c;
+  --muted-foreground: oklch(62% 0 0);
+  --accent: oklch(80% 0.18 195);
+  --accent-foreground: #151515;
+  --destructive: oklch(62% 0.22 25);
+  --border: rgb(255 255 255 / 0.05);
+  --input: rgb(255 255 255 / 0.05);
+  --ring: rgb(255 255 255 / 0.1);
+  --success: oklch(72% 0.17 150);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply min-h-dvh bg-background font-sans text-foreground antialiased;
+  }
+}
