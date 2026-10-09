@@ -7,6 +7,9 @@ export const REPO_URL = 'https://github.com/matheusaudibert/cardzera-profile-rea
 
 export const BUTTON_TEXT_MAX = 28
 
+/** Example server shown on first load so the preview is never empty. */
+export const DEFAULT_SERVER_ID = '1550342460008304675'
+
 export const COLOR_FIELDS = [
   'backgroundColor',
   'nameColor',

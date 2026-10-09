@@ -17,6 +17,7 @@ import {
   type CardConfig,
   type ColorField as ColorKey,
   DEFAULTS,
+  DEFAULT_SERVER_ID,
   REPO_URL,
   buildUrl,
   getNonDefaults,
@@ -27,6 +28,67 @@ import { cn } from '@/lib/utils'
 
 type NumberKey = 'buttonBorderRadius' | 'borderRadius' | 'titleLen'
 type PreviewState = 'idle' | 'loading' | 'loaded' | 'error'
+
+type FormState = {
+  serverId: string
+  invite: string
+  colors: Record<ColorKey, string>
+  buttonText: string
+  numbers: Record<NumberKey, string>
+  elipsis: boolean
+}
+
+const FORM_STORAGE_KEY = 'cardzera-form'
+
+const DEFAULT_FORM: FormState = {
+  serverId: DEFAULT_SERVER_ID,
+  invite: '',
+  colors: {
+    backgroundColor: DEFAULTS.backgroundColor.toUpperCase(),
+    nameColor: DEFAULTS.nameColor.toUpperCase(),
+    infoColor: DEFAULTS.infoColor.toUpperCase(),
+    buttonColor: DEFAULTS.buttonColor.toUpperCase(),
+    buttonTextColor: DEFAULTS.buttonTextColor.toUpperCase(),
+  },
+  buttonText: DEFAULTS.buttonText,
+  numbers: {
+    buttonBorderRadius: String(DEFAULTS.buttonBorderRadius),
+    borderRadius: String(DEFAULTS.borderRadius),
+    titleLen: String(DEFAULTS.titleLen),
+  },
+  elipsis: DEFAULTS.elipsis,
+}
+
+/** Saved form merged over the defaults; anything missing or malformed falls back. */
+function loadForm(): FormState {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FORM_STORAGE_KEY) ?? 'null')
+    if (!raw || typeof raw !== 'object') return DEFAULT_FORM
+    const str = (v: unknown, fallback: string) => (typeof v === 'string' ? v : fallback)
+    const pick = <K extends string>(src: unknown, defaults: Record<K, string>) =>
+      Object.fromEntries(
+        Object.entries(defaults).map(([k, v]) => [k, str((src as Record<string, unknown>)?.[k], v as string)]),
+      ) as Record<K, string>
+    return {
+      serverId: str(raw.serverId, DEFAULT_FORM.serverId),
+      invite: str(raw.invite, DEFAULT_FORM.invite),
+      colors: pick(raw.colors, DEFAULT_FORM.colors),
+      buttonText: str(raw.buttonText, DEFAULT_FORM.buttonText).slice(0, BUTTON_TEXT_MAX),
+      numbers: pick(raw.numbers, DEFAULT_FORM.numbers),
+      elipsis: typeof raw.elipsis === 'boolean' ? raw.elipsis : DEFAULT_FORM.elipsis,
+    }
+  } catch {
+    return DEFAULT_FORM
+  }
+}
+
+function saveForm(form: FormState) {
+  try {
+    localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(form))
+  } catch {
+    // Storage blocked or full: the form simply won't survive a reload.
+  }
+}
 
 function Panel({
   icon,
@@ -53,22 +115,18 @@ function Panel({
 export default function App() {
   const reduce = useReducedMotion()
   const { locale, setLocale, t } = useLocale()
-  const [serverId, setServerId] = useState('')
-  const [invite, setInvite] = useState('')
-  const [colors, setColors] = useState<Record<ColorKey, string>>({
-    backgroundColor: DEFAULTS.backgroundColor.toUpperCase(),
-    nameColor: DEFAULTS.nameColor.toUpperCase(),
-    infoColor: DEFAULTS.infoColor.toUpperCase(),
-    buttonColor: DEFAULTS.buttonColor.toUpperCase(),
-    buttonTextColor: DEFAULTS.buttonTextColor.toUpperCase(),
-  })
-  const [buttonText, setButtonText] = useState(DEFAULTS.buttonText)
-  const [numbers, setNumbers] = useState<Record<NumberKey, string>>({
-    buttonBorderRadius: String(DEFAULTS.buttonBorderRadius),
-    borderRadius: String(DEFAULTS.borderRadius),
-    titleLen: String(DEFAULTS.titleLen),
-  })
-  const [elipsis, setElipsis] = useState(DEFAULTS.elipsis)
+  const [saved] = useState(loadForm)
+  const [serverId, setServerId] = useState(saved.serverId)
+  const [invite, setInvite] = useState(saved.invite)
+  const [colors, setColors] = useState(saved.colors)
+  const [buttonText, setButtonText] = useState(saved.buttonText)
+  const [numbers, setNumbers] = useState(saved.numbers)
+  const [elipsis, setElipsis] = useState(saved.elipsis)
+
+  // Persist every edit so a reload brings the same card back.
+  useEffect(() => {
+    saveForm({ serverId, invite, colors, buttonText, numbers, elipsis })
+  }, [serverId, invite, colors, buttonText, numbers, elipsis])
 
   const setColor = (key: ColorKey) => (hex: string) => setColors((c) => ({ ...c, [key]: hex }))
   const setNumber = (key: NumberKey) => (text: string) => setNumbers((n) => ({ ...n, [key]: text }))
