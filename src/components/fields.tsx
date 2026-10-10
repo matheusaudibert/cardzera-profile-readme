@@ -1,4 +1,13 @@
 import type { ReactNode } from 'react'
+import {
+  ColorPicker,
+  ColorPickerArea,
+  ColorPickerContent,
+  ColorPickerEyeDropper,
+  ColorPickerHexInput,
+  ColorPickerHue,
+  ColorPickerTrigger,
+} from '@/components/motion/color-picker'
 import { Input } from '@/components/motion/input'
 import { RangeSlider } from '@/components/motion/range-slider'
 import { clamp, isHex } from '@/lib/cardzera'
@@ -43,37 +52,23 @@ export function ColorField({
   return (
     <div className="flex flex-col gap-1.5">
       <FieldLabel hint={hint}>{label}</FieldLabel>
-      <Input
+      <ColorPicker
         aria-label={`${label} color`}
-        value={value}
-        maxLength={6}
-        spellCheck={false}
-        autoComplete="off"
-        error={value.length > 0 && !valid}
-        onChange={(next) => onChange(next.replace(/[^0-9a-fA-F]/g, '').toUpperCase().slice(0, 6))}
-        leftIcon={
-          <span className="flex items-center gap-2">
-            <label
-              className="relative block size-5 cursor-pointer overflow-hidden rounded-full border border-foreground/10 shadow-sm"
-              style={{ background: valid ? `#${value}` : 'transparent' }}
-            >
-              <input
-                type="color"
-                aria-label={`Pick ${label.toLowerCase()} color`}
-                value={valid ? `#${value.toLowerCase()}` : '#000000'}
-                onChange={(e) => onChange(e.target.value.slice(1).toUpperCase())}
-                className="absolute -inset-2 size-[calc(100%+1rem)] cursor-pointer opacity-0"
-              />
-            </label>
-            <span className="font-mono text-sm text-muted-foreground">#</span>
-          </span>
-        }
-        classNames={{
-          ...inputClassNames,
-          leftIcon: 'pointer-events-auto left-2.5',
-          input: cn(inputClassNames.input, 'uppercase pl-[3.25rem]'),
-        }}
-      />
+        alpha={false}
+        value={valid ? `#${value.toLowerCase()}` : '#000000'}
+        onValueChange={(hex) => onChange(hex.slice(1).toUpperCase())}
+        className="max-w-none has-[>[data-color-picker-trigger]]:w-full has-[>[data-color-picker-trigger]]:self-stretch"
+      >
+        <ColorPickerTrigger className="w-full bg-card" />
+        <ColorPickerContent className="w-full min-w-64">
+          <ColorPickerArea />
+          <ColorPickerHue />
+          <div className="flex items-center gap-2">
+            <ColorPickerHexInput />
+            <ColorPickerEyeDropper />
+          </div>
+        </ColorPickerContent>
+      </ColorPicker>
     </div>
   )
 }
