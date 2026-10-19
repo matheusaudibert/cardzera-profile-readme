@@ -9,12 +9,12 @@ First, [invite the Cardzera bot](https://discord.com/oauth2/authorize?client_id=
 In a `README.md` file, include the following, replacing `:id` with your Discord server ID:
 
 ```md
-[![Discord Server Card](https://cardzera.audibert.dev/api/:serverId?t={timestamp})](https://discord.gg/your_invite)
+[![Discord Server Card](https://cardzera.audibert.dev/api/:serverId)](https://discord.gg/your_invite)
 ```
 
 It should display something similar to the following (I am using my Discord server ID as an example):
 
-[![Discord Server Card](https://cardzera.audibert.dev/api/1550342460008304675?t={timestamp})](https://discord.gg/nerdsbrasil)
+[![Discord Server Card](https://cardzera.audibert.dev/api/1550342460008304675)](https://discord.gg/nerdsbrasil)
 
 When others click it, they will be directed to your Discord server. Neat!
 
